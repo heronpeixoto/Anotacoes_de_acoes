@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tarefas urgentes</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f0f0f0; }
+    h1 { color: #333; height: 14px; font-size: 28px; margin-bottom: 10px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px; flex-wrap: wrap; }
+    .flag, .stats { background: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 0 10px #ccc; display: inline-flex; gap: 10px; align-items: center; }
+    .badge { font-weight: bold; }
+
+    form { background-color: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 10px #ccc; }
+    .linha-campo { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+    .linha-campo label { min-width: 150px; font-weight: bold; }
+    .linha-campo input { flex: 1; padding: 8px; font-size: 14px; }
+
+    .botoes-linha { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    #registrarBtn { background-color: green; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 10px 16px; }
+    .acoes-direita { display: flex; gap: 10px; }
+
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 0 10px #ccc; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: center; vertical-align: top; }
+    th { background-color: #eee; }
+
+    .col-descricao, td:nth-child(1) { max-width: 600px; word-wrap: break-word; word-break: break-word; white-space: normal; }
+    .descricao-truncada { display: inline; }
+    .botao-toggle { background: none; border: none; color: blue; cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline; }
+
+    .btn-adiar { background-color: #ffb100; color: #222; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+    .btn-resolver { background-color: #2e7d32; color: #fff; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+    .btn-reabrir { background-color: #1976d2; color: #fff; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+    .acoes { display: flex; gap: 8px; justify-content: center; }
+    .linha-arquivada { opacity: .75; }
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.2); width: 360px; max-width: calc(100% - 32px); padding: 18px; }
+    .modal header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .modal h3 { margin: 0; font-size: 18px; }
+    .modal p { margin: 8px 0 16px; font-size: 14px; color: #444; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .btn-cancelar { background: #e0e0e0; color: #222; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+    .btn-menos { background: #ffb100; color: #222; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+    .btn-mais { background: #fb8c00; color: #fff; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+    .btn-fechar { background: transparent; border: none; font-size: 18px; cursor: pointer; line-height: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>Anotações de problemas urgentes</h1>
+
+    <label class="flag">
+      <input type="checkbox" id="toggleFuturas" />
+      <span>🔭 Mostrar futuras</span>
+    </label>
+
+    <label class="flag">
+      <input type="checkbox" id="toggleArquivadas" />
+      <span>📦 Mostrar arquivadas</span>
+    </label>
+
+    <div class="stats">
+      <span>Exibidas: <span id="contadorVisiveis" class="badge">0</span></span>
+      <span>| Total: <span id="contadorTotal" class="badge">0</span></span>
+    </div>
+  </div>
+
+  <form id="formEntrada" onsubmit="handleRegistrar(event)">
+    <!-- Descrição -->
+    <div class="linha-campo">
+      <label for="placa">Descrição:</label>
+      <input type="text" id="placa" name="placa" required placeholder="Descreva aqui" />
+    </div>
+
+    <!-- Tipo de atividade -->
+    <div class="linha-campo">
+      <label for="tipoAtividade">Tipo de atividade:</label>
+      <input type="text" id="tipoAtividade" style="max-width: 250px" name="tipoAtividade" required placeholder="Ex: TI, Manutenção, Segurança" />
+    </div>
+
+    <!-- Data/hora (pré-definida para agora) -->
+    <div class="linha-campo">
+      <label for="dataHora">Data/Hora:</label>
+      <input type="datetime-local" id="dataHora" style="max-width: 180px" name="dataHora" required />
+    </div>
+
+    <div class="botoes-linha">
+      <button type="submit" id="registrarBtn">Registrar</button>
+
+      <div class="acoes-direita">
+        <button type="button" onclick="exportarJSON()">📁 Exportar</button>
+        <button type="button" onclick="document.getElementById('importarArquivo').click()">📂 Importar</button>
+      </div>
+    </div>
+
+    <input type="file" id="importarArquivo" accept=".json" style="display:none" onchange="importarJSON(event)" />
+  </form>
+
+  <h2>Problemas relacionados</h2>
+  <table id="tabelaVeiculos">
+    <thead>
+      <tr>
+        <th class="col-descricao">Tipo de Atividade + Descrição</th>
+        <th>Data/Hora</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Modal Adiar -->
+  <div id="modalAdiar" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="modalAdiarTitulo">
+    <div class="modal" role="document">
+      <header>
+        <h3 id="modalAdiarTitulo">Adiar tarefa</h3>
+        <button class="btn-fechar" id="fecharModal" aria-label="Fechar">×</button>
+      </header>
+      <p>Para quando deseja adiar? A nova data ficará fixa às <strong>07:00</strong>.</p>
+      <div class="modal-actions">
+        <button class="btn-menos" id="btnAdiar1">+ 1 dia</button>
+        <button class="btn-mais" id="btnAdiar7">+ 1 semana</button>
+        <button class="btn-cancelar" id="btnCancelarModal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('formEntrada');
+    const tabela = document.getElementById('tabelaVeiculos').querySelector('tbody');
+    const toggleFuturas = document.getElementById('toggleFuturas');
+    const toggleArquivadas = document.getElementById('toggleArquivadas');
+    const inputDataHora = document.getElementById('dataHora');
+    const contadorVisiveis = document.getElementById('contadorVisiveis');
+    const contadorTotal = document.getElementById('contadorTotal');
+
+    // Modal
+    const modal = document.getElementById('modalAdiar');
+    const btnAdiar1 = document.getElementById('btnAdiar1');
+    const btnAdiar7 = document.getElementById('btnAdiar7');
+    const btnCancelarModal = document.getElementById('btnCancelarModal');
+    const btnFecharModal = document.getElementById('fecharModal');
+    let indiceAdiar = null;
+
+    // Estrutura do item: { placa, tipoAtividade, hora (display), dataISO (comparação), arquivado: boolean }
+    let veiculos = JSON.parse(localStorage.getItem('veiculos')) || [];
+
+    function pad(n){ return n < 10 ? '0' + n : n; }
+    function agoraParaDatetimeLocal() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = pad(d.getMonth() + 1);
+      const day = pad(d.getDate());
+      const h = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      return `${y}-${m}-${day}T${h}:${min}`;
+    }
+    function preencherAgora() { inputDataHora.value = agoraParaDatetimeLocal(); }
+
+    window.addEventListener('load', () => { preencherAgora(); atualizarTabela(); });
+    toggleFuturas.addEventListener('change', atualizarTabela);
+    toggleArquivadas.addEventListener('change', atualizarTabela);
+
+    function handleRegistrar(event) {
+      event.preventDefault();
+      const placa = document.getElementById('placa').value.trim();
+      const tipoAtividade = document.getElementById('tipoAtividade').value.toUpperCase().trim();
+      const valorDataHora = inputDataHora.value;
+
+      if (!placa || !tipoAtividade) return;
+
+      let d = valorDataHora ? new Date(valorDataHora) : new Date();
+      if (isNaN(d.getTime())) d = new Date();
+
+      const dataISO = d.toISOString();
+      const hora = d.toLocaleString();
+
+      veiculos.push({ placa, tipoAtividade, hora, dataISO, arquivado: false });
+      salvarNoLocalStorage();
+      atualizarTabela();
+      form.reset();
+      preencherAgora();
+    }
+
+    function isHojeOuAtras(item) {
+      let d = item?.dataISO ? new Date(item.dataISO) : new Date(item?.hora || Date.now());
+      if (isNaN(d.getTime())) d = new Date();
+      const hoje = new Date();
+      hoje.setHours(23, 59, 59, 999);
+      return d.getTime() <= hoje.getTime();
+    }
+
+    function atualizarTabela() {
+      tabela.innerHTML = "";
+      const mostrarFuturas = toggleFuturas.checked;
+      const mostrarArquivadas = toggleArquivadas.checked;
+
+      let visiveis = 0;
+
+      veiculos.forEach((veiculo, index) => {
+        // Oculta arquivadas se não estiver marcado
+        if (veiculo.arquivado && !mostrarArquivadas) return;
+
+        const ehPassadoOuHoje = isHojeOuAtras(veiculo);
+        // Oculta futuras se não estiver marcado
+        if (!mostrarFuturas && !ehPassadoOuHoje) return;
+
+        visiveis++;
+
+        const row = tabela.insertRow();
+        if (veiculo.arquivado) row.classList.add('linha-arquivada');
+
+        // Coluna 1: [Tipo] - Descrição (com truncamento)
+        const descricaoCell = row.insertCell(0);
+        const descricaoCompleta = `[${veiculo.tipoAtividade ?? '—'}] - ${veiculo.placa ?? ''}`;
+        const limite = 100;
+
+        if (descricaoCompleta.length > limite) {
+          const span = document.createElement('span');
+          span.classList.add('descricao-truncada');
+          span.innerText = descricaoCompleta.substring(0, limite) + '... ';
+
+          const btnToggle = document.createElement('button');
+          btnToggle.classList.add('botao-toggle');
+          btnToggle.innerText = 'Ver mais';
+
+          let expandido = false;
+          btnToggle.onclick = function () {
+            expandido = !expandido;
+            if (expandido) { span.innerText = descricaoCompleta + ' '; btnToggle.innerText = 'Ver menos'; }
+            else { span.innerText = descricaoCompleta.substring(0, limite) + '... '; btnToggle.innerText = 'Ver mais'; }
+          };
+
+          descricaoCell.appendChild(span);
+          descricaoCell.appendChild(btnToggle);
+        } else {
+          descricaoCell.innerText = descricaoCompleta;
+        }
+
+        // Coluna 2: Data/Hora (exibição)
+        row.insertCell(1).innerText = veiculo.hora ?? '';
+
+        // Coluna 3: Ações
+        const acoesCell = row.insertCell(2);
+        acoesCell.classList.add('acoes');
+
+        if (veiculo.arquivado) {
+          // Mostrar REABRIR quando estiver arquivada
+          const btnReabrir = document.createElement('button');
+          btnReabrir.className = 'btn-reabrir';
+          btnReabrir.innerText = 'Reabrir';
+          btnReabrir.title = 'Retirar dos arquivados';
+          btnReabrir.onclick = function () {
+            veiculo.arquivado = false;
+            salvarNoLocalStorage();
+            atualizarTabela();
+          };
+          acoesCell.appendChild(btnReabrir);
+        } else {
+          // Mostrar RESOLVIDO e ADIAR quando não arquivada
+          const btnResolver = document.createElement('button');
+          btnResolver.className = 'btn-resolver';
+          btnResolver.innerText = 'Resolvido';
+          btnResolver.title = 'Arquivar tarefa';
+          btnResolver.onclick = function () {
+            veiculo.arquivado = true;
+            salvarNoLocalStorage();
+            atualizarTabela();
+          };
+
+          const btnAdiar = document.createElement('button');
+          btnAdiar.className = 'btn-adiar';
+          btnAdiar.innerText = 'Adiar';
+          btnAdiar.title = 'Escolha: +1 dia ou +1 semana';
+          btnAdiar.onclick = function () { abrirModalAdiar(index); };
+
+          acoesCell.appendChild(btnResolver);
+          acoesCell.appendChild(btnAdiar);
+        }
+      });
+
+      // Atualiza contadores
+      contadorVisiveis.textContent = String(visiveis);
+      contadorTotal.textContent = String(veiculos.length);
+    }
+
+    // ----- Modal: abrir/fechar -----
+    function abrirModalAdiar(index) {
+      indiceAdiar = index;
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    function fecharModalAdiar() {
+      indiceAdiar = null;
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    modal.addEventListener('click', (e) => { if (e.target === modal) fecharModalAdiar(); });
+    btnCancelarModal.addEventListener('click', fecharModalAdiar);
+    btnFecharModal.addEventListener('click', fecharModalAdiar);
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'flex') fecharModalAdiar(); });
+
+    // Botões do modal
+    btnAdiar1.addEventListener('click', () => { if (indiceAdiar !== null) { adiarDefinido(indiceAdiar, 1); fecharModalAdiar(); }});
+    btnAdiar7.addEventListener('click', () => { if (indiceAdiar !== null) { adiarDefinido(indiceAdiar, 7); fecharModalAdiar(); }});
+
+    // Aplica o adiamento (qtdDias), fixando horário 07:00 local
+    function adiarDefinido(index, qtdDias) {
+      const item = veiculos[index];
+      let d = item?.dataISO ? new Date(item.dataISO) : new Date(item?.hora || Date.now());
+      if (isNaN(d.getTime())) d = new Date();
+
+      d.setDate(d.getDate() + qtdDias);
+      d.setHours(7, 0, 0, 0); // 07:00
+
+      item.dataISO = d.toISOString();
+      item.hora = d.toLocaleString();
+
+      salvarNoLocalStorage();
+      atualizarTabela();
+    }
+
+    function salvarNoLocalStorage() {
+      localStorage.setItem('veiculos', JSON.stringify(veiculos));
+    }
+
+    function exportarJSON() {
+      const blob = new Blob([JSON.stringify(veiculos, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "problemas_urgentes.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importarJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const dados = JSON.parse(e.target.result);
+          if (Array.isArray(dados)) {
+            veiculos = dados.map(x => {
+              let d = x?.dataISO ? new Date(x.dataISO) : (x?.hora ? new Date(x.hora) : new Date());
+              if (isNaN(d.getTime())) d = new Date();
+              return { ...x, dataISO: d.toISOString(), hora: d.toLocaleString(), arquivado: Boolean(x.arquivado) };
+            });
+            salvarNoLocalStorage();
+            atualizarTabela();
+            alert("Importação concluída com sucesso.");
+          } else {
+            alert("Arquivo inválido: deve conter uma lista de objetos.");
+          }
+        } catch (err) {
+          alert("Erro ao importar JSON: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+
+</body>
+</html>
