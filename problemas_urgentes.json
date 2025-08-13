@@ -1,0 +1,68 @@
+[
+  {
+    "placa": "COLOCAR EM PRODUÇÃO O GREEN",
+    "hora": "13/08/2025, 07:00:00",
+    "dataISO": "2025-08-13T10:00:00.000Z"
+  },
+  {
+    "placa": "TESTAR O ENVIO PELA REMESSA LIGHT (LUCINEIA)",
+    "hora": "12/08/2025, 07:00:00",
+    "dataISO": "2025-08-12T10:00:00.000Z",
+    "arquivado": true
+  },
+  {
+    "placa": "INICIAR OS ENVIOS DOS ARQUIVOS PARA A BRADESCO DIA 11/08/2025",
+    "tipoAtividade": "Remessa Digital",
+    "hora": "12/08/2025, 07:00:00",
+    "dataISO": "2025-08-12T10:00:00.000Z",
+    "arquivado": true
+  },
+  {
+    "placa": "ENTRADA DE NOTA PARA INVESTIMENTO",
+    "tipoAtividade": "s/ chamado",
+    "hora": "13/08/2025, 07:00:00",
+    "dataISO": "2025-08-13T10:00:00.000Z"
+  },
+  {
+    "placa": "TESTE ARQUIVAR",
+    "tipoAtividade": "teste",
+    "hora": "11/08/2025, 15:57:00",
+    "dataISO": "2025-08-11T18:57:00.000Z",
+    "arquivado": true
+  },
+  {
+    "placa": "VERIFICAR CHAMADO ATENDIMENTO 1 NA REMESSA 378748",
+    "tipoAtividade": "Ticket 106810",
+    "hora": "12/08/2025, 07:30:00",
+    "dataISO": "2025-08-12T10:30:00.000Z",
+    "arquivado": true
+  },
+  {
+    "placa": "RETIRAR A ABERTURA DA INSTALAÇÃO DO SCANNER NO UPLOAD DO ARQUIVO",
+    "tipoAtividade": "Remessa Digital",
+    "hora": "12/08/2025, 14:29:00",
+    "dataISO": "2025-08-12T17:29:00.000Z",
+    "arquivado": false
+  },
+  {
+    "placa": "SOLICITAR CABO PARA O SCANNER DA LUCINEIA",
+    "tipoAtividade": "Remessa Digital",
+    "hora": "14/08/2025, 07:00:00",
+    "dataISO": "2025-08-14T10:00:00.000Z",
+    "arquivado": false
+  },
+  {
+    "placa": "TESTE DE INSERÇÃO",
+    "tipoAtividade": "teste atividade",
+    "hora": "12/08/2025, 15:15:00",
+    "dataISO": "2025-08-12T18:15:00.000Z",
+    "arquivado": true
+  },
+  {
+    "placa": "Teste de inserção",
+    "tipoAtividade": "TESTE",
+    "hora": "12/08/2025, 15:23:00",
+    "dataISO": "2025-08-12T18:23:00.000Z",
+    "arquivado": true
+  }
+]
